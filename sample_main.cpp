@@ -1,13 +1,13 @@
-#include<time.h>
+#include<ctime>
 #include"LRU.hpp"
 
 const int kMoveRate = 5; //工作面移动率，即处理moveRate个引用后将起始位置加1
-const int kStartPos = 0; //工作面的起始位置
-const int kPageSize = 100;   //虚拟内存的尺寸
+int kStartPos = 0; //工作面的起始位置
+const int kPageSize = 10;   //虚拟内存页面总数
 const int kPageNum = 5;  //工作面中包含的页面数
 const int kVibrateRate = 0.3;    //工作面剧烈抖动率
 const int kFinalRsSize = 100;    //RS串最终长度
-vector<int> rs;
+
 /*
 生成产生串
 */
@@ -16,8 +16,14 @@ void GenerateRS(vector<int>& rs, int kMoveRate, int kStartPos, int kPageSize, in
     srand(time(0));
     while(length < kFinalRsSize){
         for(int step=0; step<kMoveRate; ++step){
-            rs.push_back(rand() % (kPageNum - kStartPos + 1) + kStartPos);
-            length++;
+            if(kPageNum - kStartPos + 1 != 0){
+                rs.push_back(rand() % (kPageNum - kStartPos + 1) + kStartPos);
+                length++;
+            }
+            else{
+                rs.push_back(rand() % (kPageNum - kStartPos + 2) + kStartPos);
+                length++;
+            }
         }
         int random_num = rand() % 100 / (double) 101;
         if(random_num < kVibrateRate)
@@ -26,6 +32,17 @@ void GenerateRS(vector<int>& rs, int kMoveRate, int kStartPos, int kPageSize, in
             kStartPos = (kStartPos + 1) % kPageSize;
     }
 }
-int main(){
+void test(){
+    GenerateRS(rs, kMoveRate, kStartPos, kPageSize, kPageNum, kVibrateRate, kFinalRsSize);
+    Memory memory(10);
+    clock_t start, end;
+    start = clock();
+    memory.LRU();
+    end = clock();
+    cout<<((double) end - start) / CLOCKS_PER_SEC * 100<<endl;
     
+}
+int main(){
+    test();
+    return 0;
 }
