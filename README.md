@@ -5,12 +5,13 @@ uses vector to simulate the memory space and LRU queue.
 ## Replacement Time
 Length of reference string: 1000  
 Length of virtual memory space: 3
-algorithm | replacement frequency 
- - | - 
-FIFO | 440
-CLOCK | 437
-OPT | 271
-LRU | 429
+
+| algorithm | replacement frequency |  
+| ------------- |:-------------:|
+| FIFO | 440 |  
+| CLOCK | 437 |
+| OPT | 271 |
+| LRU | 429 |
 
 ## TODO
 - [x] Finish the test scripts for LRU cache
