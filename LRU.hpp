@@ -162,10 +162,14 @@ void Memory::CLOCK(){
     vector<int>::iterator itrrs = rs.begin();
     for(; itrrs!=rs.end(); ++itrrs){
         vector<int>::iterator itrmemory = find(memory_space.begin(), memory_space.end(), *itrrs);
-        //在虚拟内存中寻找到要访问的页面，置该位置的标志位为1，更新指针位置
+        //在虚拟内存中寻找到要访问的页面，置该位置的标志位为1
         if(itrmemory != memory_space.end()){
-            clock_space[clock_index] = 1;
-            clock_index = (clock_index+1) % memory_size_;
+            for(int i=0; i<memory_size_; ++i)
+                if(clock_space[i] == *itrrs){
+                    clock_space[i] = 1;
+                    break;
+                }
+                    
         }
         //在虚拟内存中没找到要访问的页面
         else{
@@ -185,7 +189,21 @@ void Memory::CLOCK(){
                 3、若迭代一遍之后没有进行置换操作，则重新进行迭代
             */
             else{
-                
+                int replace_flag = 0;
+                while(!replace_flag){
+                    for(int i=0; i<memory_size_; ++i){
+                        if(clock_space[i] == 1){
+                            clock_space[i] = 0;
+                        }
+                        if(clock_space[i] == 0){
+                            memory_space.erase(memory_space.begin()+i);
+                            memory_space.insert(memory_space.begin()+i, *itrrs);
+                            clock_space[i] = 1;
+                            replace_flag = 1;
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
