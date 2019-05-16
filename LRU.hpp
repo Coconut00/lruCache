@@ -36,7 +36,21 @@ LRU::~LRU(){
 }
 
 int LRU::get(int key){
+    if(hashmap.find(key) != hashmap.end()){
+        LRUNode* node = hashmap[key];
 
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+
+        node->next = head->next;
+        node->prev = head;
+        head->next = node;
+        head->next->prev = head;
+
+        return node->value;
+    }
+    else
+        return -1;
 }
 
 void LRU::replace(){
