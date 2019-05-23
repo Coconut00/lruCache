@@ -4,6 +4,7 @@
 #include<cstring>
 using namespace std;
 vector<int> rs;
+int replace_count;
 class Memory{
 private:
     int memory_size_;
@@ -16,6 +17,7 @@ public:
     void FIFO();
     void OPT();
     void CLOCK();
+    void RANDOM();
 };
 
 Memory::Memory(int memory_size){
@@ -31,9 +33,8 @@ void Memory::LRU(){
         if(itrmemory != memory_space.end()){
             vector<int>::iterator itrlru = find(lru_queue.begin(), lru_queue.end(), *itrrs);
             if(itrlru != lru_queue.end()){
-                int temp = *itrlru;
                 lru_queue.erase(itrlru);
-                lru_queue.insert(lru_queue.begin(), temp);
+                lru_queue.insert(lru_queue.begin(), *itrrs);
             }
         }
         /*
@@ -59,12 +60,16 @@ void Memory::LRU(){
                 3、在虚拟内存空间中删除该页面号，插入新的页面号
             */
             else{
+                replace_count++;
+                int temp = lru_queue[lru_size_-1];
                 lru_queue.pop_back();
                 lru_queue.insert(lru_queue.begin(), *itrrs);
-                memory_space.erase(itrmemory-1);
+                vector<int>::iterator itrtemp = find(memory_space.begin(), memory_space.end(), temp);
+                memory_space.erase(itrtemp);
                 memory_space.push_back(*itrrs);
             }
         }
+        
     }
 }
 
@@ -90,6 +95,7 @@ void Memory::FIFO(){
                 3、更新replace_position
             */
             else{
+                replace_count++;
                 memory_space.erase(memory_space.begin()+replace_position);
                 memory_space.insert(memory_space.begin()+replace_position, *itrrs);
                 replace_position = (replace_position+1) % memory_size_;
@@ -124,7 +130,8 @@ void Memory::OPT(){
                 3、更新引用串已访问的位置
             */
             else{
-                int memory_index = -1, rs_index, max_length = -1,replace_position = -1, flag = 0;
+                replace_count++;
+                int memory_index = 0, rs_index, max_length = -1,replace_position = 0, flag = 0;
                 bool is_find;
                 for(; memory_index<memory_size_; ++memory_index){
                     is_find = false;
@@ -150,6 +157,7 @@ void Memory::OPT(){
                     memory_space.erase(memory_space.begin()+replace_position);
                     memory_space.insert(memory_space.begin()+replace_position, *itrrs);
                 }
+                rs_used++;
             }
         }
     }
@@ -164,12 +172,8 @@ void Memory::CLOCK(){
         vector<int>::iterator itrmemory = find(memory_space.begin(), memory_space.end(), *itrrs);
         //在虚拟内存中寻找到要访问的页面，置该位置的标志位为1
         if(itrmemory != memory_space.end()){
-            for(int i=0; i<memory_size_; ++i)
-                if(clock_space[i] == *itrrs){
-                    clock_space[i] = 1;
-                    break;
-                }
-                    
+            int update_position = distance(memory_space.begin(),itrmemory);
+            clock_space[update_position] = 1;
         }
         //在虚拟内存中没找到要访问的页面
         else{
@@ -189,21 +193,51 @@ void Memory::CLOCK(){
                 3、若迭代一遍之后没有进行置换操作，则重新进行迭代
             */
             else{
+                replace_count++;
                 int replace_flag = 0;
                 while(!replace_flag){
-                    for(int i=0; i<memory_size_; ++i){
-                        if(clock_space[i] == 1){
-                            clock_space[i] = 0;
-                        }
+                    for(int i=clock_index; i<memory_size_; ++i){
                         if(clock_space[i] == 0){
                             memory_space.erase(memory_space.begin()+i);
                             memory_space.insert(memory_space.begin()+i, *itrrs);
                             clock_space[i] = 1;
                             replace_flag = 1;
+                            clock_index = (clock_index+1) % memory_size_;
                             break;
+                        }
+                        else if(clock_space[i] == 1){
+                            clock_space[i] = 0;
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+void Memory::RANDOM(){
+    vector<int>::iterator itrrs = rs.begin();
+    for(; itrrs!=rs.end(); ++itrrs){
+        vector<int>::iterator itrmemory = find(memory_space.begin(), memory_space.end(), *itrrs);
+        //在虚拟内存中寻找到要访问的页面，不操作
+        if(itrmemory != memory_space.end()) continue;
+        //在虚拟内存中没找到要访问的页面
+        else{
+            /*
+            空间够的情况：
+                在虚拟内存空间中插入该页面号
+            */
+            if(memory_space.size() < memory_size_)
+                memory_space.push_back(*itrrs);
+            /*
+            空间不够的情况：
+                在虚拟空间内存随机选取一个位置进行替换
+            */
+            else{
+                replace_count++;
+                int replace_position = (rand() % (memory_size_ - 0));
+                memory_space.erase(memory_space.begin()+replace_position);
+                memory_space.insert(memory_space.begin()+replace_position, *itrrs);
             }
         }
     }
